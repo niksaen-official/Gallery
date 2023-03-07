@@ -1,36 +1,38 @@
 package com.niksaen.gallery
 
-import android.app.Application
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Intent
+import android.Manifest
+import android.app.*
+import android.app.ActivityManager.RunningTaskInfo
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
 import android.os.Build
-import android.view.View
-import android.widget.Toast
-import com.google.android.material.snackbar.Snackbar
-import com.niksaen.gallery.data.Settings
+import android.util.Log
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.niksaen.gallery.retrofit.PhotoApi
-import com.niksaen.gallery.service.NotificationService
+import com.niksaen.gallery.ui.MainActivity
 import io.realm.Realm
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.IOException
 
 
 class GalleryApp:Application() {
     lateinit var photoApi:PhotoApi
+    lateinit var notificationManager:NotificationManager
     val CHANNEL_ID = "CHANNEL"
-
 
     override fun onCreate() {
         super.onCreate()
         configureApi()
-
+        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         Realm.init(this)
     }
+
     private fun configureApi(){
         val httpLoggingInterceptor = HttpLoggingInterceptor()
         httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
@@ -45,19 +47,38 @@ class GalleryApp:Application() {
 
         photoApi = retrofit.create(PhotoApi::class.java)
     }
-    fun sendNotification(){
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    fun configureNotification():Notification{
+        val builder = Notification.Builder(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(CHANNEL_ID,"NAME", NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(notificationChannel)
-        } else {
-            TODO("VERSION.SDK_INT < O")
+            builder.setChannelId(CHANNEL_ID)
         }
-        val builder = Notification.Builder(this)
         builder.setSmallIcon(android.R.drawable.ic_dialog_info)
         builder.setContentTitle("Gallery")
         builder.setContentText("New photo")
-        builder.setChannelId(CHANNEL_ID)
-        notificationManager.notify(1, builder.build())
+        return builder.build()
+    }
+    fun sendNotification(){
+        if (isNetworkAvailable(this)) {
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU) {
+                notificationManager.notify(1,configureNotification())
+            } else {
+                val permStat =
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU) {
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    } else {
+                        PackageManager.PERMISSION_DENIED
+                    }
+                if(permStat == PackageManager.PERMISSION_GRANTED){
+                    notificationManager.notify(1,configureNotification())
+                }
+            }
+        }
+    }
+    private fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetworkInfo = connectivityManager.activeNetworkInfo
+        return activeNetworkInfo != null
     }
 }

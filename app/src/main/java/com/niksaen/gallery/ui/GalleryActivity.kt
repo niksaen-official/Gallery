@@ -50,11 +50,11 @@ class GalleryActivity : AppCompatActivity() {
         val intent = Intent(this,NotificationService::class.java)
         if (!settings.notificationActive){
             startService(intent)
-            Snackbar.make(ui.root,"Notification activated", Toast.LENGTH_LONG).show()
+            Snackbar.make(ui.root,"Notification activated", Snackbar.LENGTH_LONG).show()
             settings.setNotificationActive()
         }else{
             stopService(intent)
-            Snackbar.make(ui.root,"Notification deactivated", Toast.LENGTH_LONG).show()
+            Snackbar.make(ui.root,"Notification deactivated", Snackbar.LENGTH_LONG).show()
             settings.setNotificationActive()
         }
     }
