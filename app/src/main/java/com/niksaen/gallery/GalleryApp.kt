@@ -4,9 +4,11 @@ import android.Manifest
 import android.app.*
 import android.app.ActivityManager.RunningTaskInfo
 import android.content.Context
+import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.os.Build
+import android.os.Message
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -76,9 +78,17 @@ class GalleryApp:Application() {
             }
         }
     }
-    private fun isNetworkAvailable(context: Context): Boolean {
+    fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetworkInfo = connectivityManager.activeNetworkInfo
         return activeNetworkInfo != null
+    }
+    fun dialog(message: String,context: Context?){
+        val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+        builder.setIcon(android.R.drawable.stat_notify_error)
+        builder.setTitle("Error: No internet connection")
+        builder.setMessage(message)
+        builder.setPositiveButton("Ok") { dialog, which -> dialog.dismiss() }
+        builder.create().show()
     }
 }

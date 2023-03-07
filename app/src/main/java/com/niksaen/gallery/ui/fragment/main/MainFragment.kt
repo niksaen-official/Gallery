@@ -1,14 +1,13 @@
 package com.niksaen.gallery.ui.fragment.main
 
 import android.annotation.SuppressLint
-import androidx.lifecycle.ViewModelProvider
+import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.PagerSnapHelper
 import com.google.android.material.snackbar.Snackbar
 import com.niksaen.gallery.GalleryApp
@@ -34,7 +33,7 @@ class MainFragment : Fragment() {
                 adapter = PhotoAdapter(context,it)
                 ui.photoList.adapter = adapter
             },{
-                Log.e("Error!!!",it.message.toString())
+                (this.activity?.application as GalleryApp).dialog(it.message.toString(),context)
             })
         val snapHelper = PagerSnapHelper()
         snapHelper.attachToRecyclerView(ui.photoList)
