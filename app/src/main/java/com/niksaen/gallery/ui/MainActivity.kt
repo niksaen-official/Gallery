@@ -7,11 +7,16 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.PackageManagerCompat
 import com.niksaen.gallery.GalleryApp
 import com.niksaen.gallery.R
+import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,8 +35,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
     fun nextActivity(){
-        val intent = Intent(this,GalleryActivity::class.java)
-        startActivity(intent)
-        finish()
+        val runnable = Runnable {
+            val intent = Intent(this,GalleryActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+        val handler = Handler()
+        handler.postDelayed(runnable,3000)
+        handler.removeCallbacks(runnable)
     }
 }
