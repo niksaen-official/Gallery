@@ -10,6 +10,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
@@ -25,13 +26,14 @@ class NotificationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return super.onStartCommand(intent, flags, startId)
+        someTask()
+        return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
         isActive = false
-        disposable.dispose()
+
         Log.e("NotificationService","Service stopped and destroyed")
     }
 
@@ -42,19 +44,15 @@ class NotificationService : Service() {
     @SuppressLint("CheckResult")
     fun someTask() {
         Observable.timer(5,TimeUnit.SECONDS)
-            .subscribe {
+            .flatMapSingle {
                 (application as GalleryApp).photoApi.getResponse()
-                    .map { it.photos.photo }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread()).subscribe( {
-                        val newPhotoUrl = "https://live.staticflickr.com/"+it[0].server+"/"+it[0].id+"_"+it[0].secret+".jpg"
-                        Log.e("Tag","\nnew url: $newPhotoUrl\nold url: $oldPhotoUrl")
-                        if(oldPhotoUrl != newPhotoUrl){
-                            (application as GalleryApp).sendNotification()
-                            oldPhotoUrl = newPhotoUrl
-                            Log.e("Tag","\nnew url: $newPhotoUrl\nold url: $oldPhotoUrl")
-                        }
-                    },{})
+            }.map { it.photos.photo }
+            .subscribeBy{
+                val newPhotoUrl = "https://live.staticflickr.com/"+it[0].server+"/"+it[0].id+"_"+it[0].secret+".jpg"
+                if(oldPhotoUrl != newPhotoUrl){
+                    (application as GalleryApp).sendNotification()
+                    oldPhotoUrl = newPhotoUrl
+                }
             }.addTo(disposable)
     }
 }

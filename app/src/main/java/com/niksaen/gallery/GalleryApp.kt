@@ -2,15 +2,11 @@ package com.niksaen.gallery
 
 import android.Manifest
 import android.app.*
-import android.app.ActivityManager.RunningTaskInfo
 import android.content.Context
-import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.os.Build
-import android.os.Message
-import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.niksaen.gallery.retrofit.PhotoApi
 import com.niksaen.gallery.ui.MainActivity
@@ -20,7 +16,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
-import java.io.IOException
 
 
 class GalleryApp:Application() {
@@ -50,6 +45,8 @@ class GalleryApp:Application() {
         photoApi = retrofit.create(PhotoApi::class.java)
     }
     fun configureNotification():Notification{
+        val resultIntent = Intent(this, MainActivity::class.java)
+        val resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_IMMUTABLE)
         val builder = Notification.Builder(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(CHANNEL_ID,"NAME", NotificationManager.IMPORTANCE_HIGH)
@@ -59,6 +56,7 @@ class GalleryApp:Application() {
         builder.setSmallIcon(android.R.drawable.ic_dialog_info)
         builder.setContentTitle("Gallery")
         builder.setContentText("New photo")
+        builder.setContentIntent(resultPendingIntent)
         return builder.build()
     }
     fun sendNotification(){
